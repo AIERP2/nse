@@ -1,50 +1,42 @@
-import streamlit as st
 import yfinance as yf
+import streamlit as st
 
-# Title for the app
-st.title('NSE Stock Price & Fundamental Analysis')
+# Streamlit app title
+st.title('NSE Stock Price and Fundamental Analysis')
 
-# Sidebar for user input
-st.sidebar.header('User Input')
+# User input for stock symbol and period
+symbol = st.text_input("Enter the NSE stock symbol (e.g., 'RELIANCE.NS')", "RELIANCE.NS")
+period = st.selectbox("Select the period for stock history:", ['1d', '5d', '1mo', '3mo', '6mo', '1y', '5y', 'max'])
 
-# Get stock symbol from user input
-stock_symbol = st.sidebar.text_input('Enter NSE Stock Symbol', 'RELIANCE')
+# Button to fetch data
+if st.button('Get Stock Data'):
+    # Fetch stock data
+    stock_data = yf.Ticker(symbol)
+    stock_price = stock_data.history(period=period)
 
-# Fetch stock price and fundamental data from Yahoo Finance
-def get_stock_data(symbol):
-    try:
-        stock = yf.Ticker(symbol + '.NS')
-        stock_info = stock.info
-        return stock_info
-    except Exception as e:
-        st.error(f"Error fetching data: {e}")
-        return None
+    if stock_price.empty:
+        st.error(f"No data found for {symbol}.")
+    else:
+        st.subheader(f"Stock Price Data for {symbol}")
+        st.write(stock_price)
 
-# Display stock price
-if st.sidebar.button('Get Stock Price'):
-    stock_data = get_stock_data(stock_symbol)
-    if stock_data:
-        st.write(f"### {stock_symbol} Latest Price: ₹{stock_data.get('regularMarketPrice', 'N/A')}")
+    # Fetch fundamental data
+    stock_info = stock_data.info
+    st.subheader(f"Fundamental Analysis for {symbol}")
 
-# Display stock fundamentals
-if st.sidebar.button('Get Fundamental Analysis'):
-    stock_data = get_stock_data(stock_symbol)
-    if stock_data:
-        st.write('### Fundamental Analysis:')
-        st.write(f"**Market Cap:** ₹{stock_data.get('marketCap', 'N/A')}")
-        st.write(f"**PE Ratio:** {stock_data.get('trailingPE', 'N/A')}")
-        st.write(f"**Dividend Yield:** {stock_data.get('dividendYield', 'N/A')}")
-        st.write(f"**52-Week High:** ₹{stock_data.get('fiftyTwoWeekHigh', 'N/A')}")
-        st.write(f"**52-Week Low:** ₹{stock_data.get('fiftyTwoWeekLow', 'N/A')}")
-        st.write(f"**Total Revenue:** ₹{stock_data.get('totalRevenue', 'N/A')}")
-        st.write(f"**Free Cashflow:** ₹{stock_data.get('freeCashflow', 'N/A')}")
+    # Display key financial metrics in columns
+    col1, col2 = st.columns(2)
 
-# Option to display complete financials
-if st.sidebar.checkbox('Show Full Financial Data'):
-    stock = yf.Ticker(stock_symbol + '.NS')
-    st.write("### Balance Sheet")
-    st.write(stock.balance_sheet)
-    st.write("### Cash Flow")
-    st.write(stock.cashflow)
-    st.write("### Income Statement")
-    st.write(stock.financials)
+    col1.write(f"**Company Name:** {stock_info.get('longName', 'N/A')}")
+    col1.write(f"**Sector:** {stock_info.get('sector', 'N/A')}")
+    col1.write(f"**Industry:** {stock_info.get('industry', 'N/A')}")
+    col1.write(f"**Market Cap:** {stock_info.get('marketCap', 'N/A')}")
+    col1.write(f"**P/E Ratio:** {stock_info.get('forwardPE', 'N/A')}")
+    col1.write(f"**P/B Ratio:** {stock_info.get('priceToBook', 'N/A')}")
+
+    col2.write(f"**Dividend Yield:** {stock_info.get('dividendYield', 'N/A')}")
+    col2.write(f"**52 Week High:** {stock_info.get('fiftyTwoWeekHigh', 'N/A')}")
+    col2.write(f"**52 Week Low:** {stock_info.get('fiftyTwoWeekLow', 'N/A')}")
+    col2.write(f"**Beta (Volatility):** {stock_info.get('beta', 'N/A')}")
+    col2.write(f"**Return on Equity (ROE):** {stock_info.get('returnOnEquity', 'N/A')}")
+    col2.write(f"**EPS (Earnings Per Share):** {stock_info.get('trailingEps', 'N/A')}")
