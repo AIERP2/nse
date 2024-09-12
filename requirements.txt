@@ -1,3 +1,4 @@
 streamlit
 nsetools
 yfinance
+pandas
